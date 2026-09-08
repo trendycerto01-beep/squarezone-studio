@@ -63,12 +63,13 @@ export function wrapLines(
       out.push("");
       continue;
     }
-    let line = words[0];
+    let line = words[0] as string;
     for (let i = 1; i < words.length; i++) {
-      const test = `${line} ${words[i]}`;
+      const word = words[i] as string;
+      const test = `${line} ${word}`;
       if (ctx.measureText(test).width > maxWidth) {
         out.push(line);
-        line = words[i];
+        line = word;
       } else line = test;
     }
     out.push(line);

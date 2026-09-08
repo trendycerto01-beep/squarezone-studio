@@ -40,13 +40,13 @@ export function drawBorder(
       stroke(8, 12, color);
       stroke(26, 3, shade(color, 0.35));
       ctx.fillStyle = shade(color, 0.4);
-      const corners = [
-        [46, 46],
-        [CARD_W - 46, 46],
-        [46, CARD_H - 46],
-        [CARD_W - 46, CARD_H - 46],
+      const corners: Array<{ cx: number; cy: number }> = [
+        { cx: 46, cy: 46 },
+        { cx: CARD_W - 46, cy: 46 },
+        { cx: 46, cy: CARD_H - 46 },
+        { cx: CARD_W - 46, cy: CARD_H - 46 },
       ];
-      for (const [cx, cy] of corners) {
+      for (const { cx, cy } of corners) {
         ctx.beginPath();
         for (let i = 0; i < 8; i++) {
           const a = (i / 8) * Math.PI * 2;
