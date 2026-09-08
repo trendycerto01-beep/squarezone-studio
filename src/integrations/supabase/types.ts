@@ -14,7 +14,120 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cards: {
+        Row: {
+          art_fit: string
+          art_url: string | null
+          art_x: number
+          art_y: number
+          art_zoom: number
+          auto_border: boolean
+          auto_text: boolean
+          back_url: string | null
+          base_color: string
+          body_font: string
+          border_color: string
+          border_style: string
+          card_number: string | null
+          card_type: string
+          cost_icon: number
+          cost_number: string | null
+          created_at: string
+          effect_text: string | null
+          flavor_text: string | null
+          id: string
+          name: string
+          neon_inner: boolean
+          rarity: string
+          settings: Json
+          subtype: string | null
+          texture1: string
+          texture1_int: number
+          texture2: string
+          texture2_int: number
+          thumbnail_url: string | null
+          title: string | null
+          title_align: string
+          title_font: string
+          title_size: number
+          updated_at: string
+        }
+        Insert: {
+          art_fit?: string
+          art_url?: string | null
+          art_x?: number
+          art_y?: number
+          art_zoom?: number
+          auto_border?: boolean
+          auto_text?: boolean
+          back_url?: string | null
+          base_color?: string
+          body_font?: string
+          border_color?: string
+          border_style?: string
+          card_number?: string | null
+          card_type?: string
+          cost_icon?: number
+          cost_number?: string | null
+          created_at?: string
+          effect_text?: string | null
+          flavor_text?: string | null
+          id?: string
+          name: string
+          neon_inner?: boolean
+          rarity?: string
+          settings?: Json
+          subtype?: string | null
+          texture1?: string
+          texture1_int?: number
+          texture2?: string
+          texture2_int?: number
+          thumbnail_url?: string | null
+          title?: string | null
+          title_align?: string
+          title_font?: string
+          title_size?: number
+          updated_at?: string
+        }
+        Update: {
+          art_fit?: string
+          art_url?: string | null
+          art_x?: number
+          art_y?: number
+          art_zoom?: number
+          auto_border?: boolean
+          auto_text?: boolean
+          back_url?: string | null
+          base_color?: string
+          body_font?: string
+          border_color?: string
+          border_style?: string
+          card_number?: string | null
+          card_type?: string
+          cost_icon?: number
+          cost_number?: string | null
+          created_at?: string
+          effect_text?: string | null
+          flavor_text?: string | null
+          id?: string
+          name?: string
+          neon_inner?: boolean
+          rarity?: string
+          settings?: Json
+          subtype?: string | null
+          texture1?: string
+          texture1_int?: number
+          texture2?: string
+          texture2_int?: number
+          thumbnail_url?: string | null
+          title?: string | null
+          title_align?: string
+          title_font?: string
+          title_size?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
