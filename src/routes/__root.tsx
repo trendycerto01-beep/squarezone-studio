@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -72,25 +73,27 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+const FONT_HREF =
+  "https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Uncial+Antiqua&family=Almendra:ital,wght@0,400;0,700;1,400&family=Metamorphous&family=Philosopher:ital,wght@0,400;0,700;1,400&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap";
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "SquareZone Card Generator" },
+      {
+        name: "description",
+        content: "Crie, gerencie e imprima as cartas do jogo SquareZone.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "stylesheet", href: FONT_HREF },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
   }),
@@ -102,7 +105,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>
@@ -114,13 +117,49 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+const NAV = [
+  { to: "/", label: "Biblioteca" },
+  { to: "/editor", label: "Editor" },
+  { to: "/print", label: "Impressão" },
+  { to: "/settings", label: "Preferências" },
+] as const;
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
+        <header className="flex h-12 shrink-0 items-center gap-6 border-b border-border bg-[var(--panel)] px-4">
+          <Link to="/" className="flex items-center gap-2">
+            <span className="grid h-6 w-6 place-items-center rounded bg-primary text-[10px] font-bold text-primary-foreground">
+              SZ
+            </span>
+            <span className="text-sm font-semibold tracking-tight">SquareZone</span>
+            <span className="text-[10px] uppercase tracking-[1.5px] text-[var(--text3)]">
+              Card Generator
+            </span>
+          </Link>
+          <nav className="flex items-center gap-1">
+            {NAV.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="rounded-md px-3 py-1.5 text-xs text-[var(--text2)] transition-colors hover:bg-[var(--panel2)] hover:text-foreground"
+                activeProps={{ className: "bg-[var(--panel2)] text-foreground" }}
+                activeOptions={{ exact: item.to === "/" }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </header>
+        <main className="min-h-0 flex-1 overflow-hidden">
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </main>
+      </div>
+      <Toaster position="bottom-right" />
     </QueryClientProvider>
   );
 }
