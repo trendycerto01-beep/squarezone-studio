@@ -96,7 +96,11 @@ export function useCardEditor(cardId?: string) {
   }, []);
 
   const reset = useCallback(() => {
-    setCard((prev) => ({ ...DEFAULT_CARD, id: prev.id, name: prev.name }));
+    setCard((prev) => {
+      const next: CardState = { ...DEFAULT_CARD, name: prev.name };
+      if (prev.id) next.id = prev.id;
+      return next;
+    });
     setPendingArt(null);
     setArtImage(null);
     setDirty(true);
