@@ -36,6 +36,7 @@ export interface CardState {
   art_url: string | null;
   thumbnail_url: string | null;
   back_url: string | null;
+  cost_icon_url: string | null;
   neon_inner: boolean;
   auto_text: boolean;
   settings: Record<string, unknown>;
@@ -71,6 +72,7 @@ export const DEFAULT_CARD: CardState = {
   art_url: null,
   thumbnail_url: null,
   back_url: null,
+  cost_icon_url: null,
   neon_inner: false,
   auto_text: true,
   settings: {},
