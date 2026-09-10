@@ -16,6 +16,9 @@ export interface ControlPanelProps {
   artName: string | null;
   onFile: (file: File) => void;
   onClearArt: () => void;
+  iconName: string | null;
+  onIconFile: (file: File) => void;
+  onClearIcon: () => void;
   saving: boolean;
   dirty: boolean;
   savedRecently: boolean;
@@ -37,7 +40,13 @@ export function ControlPanel(props: ControlPanelProps) {
         onFile={props.onFile}
         onClear={props.onClearArt}
       />
-      <CostSection card={card} update={update} />
+      <CostSection
+        card={card}
+        update={update}
+        iconName={props.iconName}
+        onIconFile={props.onIconFile}
+        onIconClear={props.onClearIcon}
+      />
       <IdentitySection card={card} update={update} />
       <TypographySection card={card} update={update} />
       <ColorSection card={card} update={update} />
