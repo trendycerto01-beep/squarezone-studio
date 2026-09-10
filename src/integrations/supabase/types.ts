@@ -31,6 +31,7 @@ export type Database = {
           card_number: string | null
           card_type: string
           cost_icon: number
+          cost_icon_url: string | null
           cost_number: string | null
           created_at: string
           effect_text: string | null
@@ -68,6 +69,7 @@ export type Database = {
           card_number?: string | null
           card_type?: string
           cost_icon?: number
+          cost_icon_url?: string | null
           cost_number?: string | null
           created_at?: string
           effect_text?: string | null
@@ -105,6 +107,7 @@ export type Database = {
           card_number?: string | null
           card_type?: string
           cost_icon?: number
+          cost_icon_url?: string | null
           cost_number?: string | null
           created_at?: string
           effect_text?: string | null
