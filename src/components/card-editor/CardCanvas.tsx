@@ -7,10 +7,12 @@ import type { CardState } from "@/types/card";
 export function CardCanvas({
   card,
   art,
+  costIcon,
   canvasRef,
 }: {
   card: CardState;
   art: HTMLImageElement | null;
+  costIcon: HTMLImageElement | null;
   canvasRef: RefObject<HTMLCanvasElement | null>;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -30,8 +32,8 @@ export function CardCanvas({
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    drawCard(ctx, card, art);
-  }, [card, art, fontsReady, canvasRef]);
+    drawCard(ctx, card, art, costIcon);
+  }, [card, art, costIcon, fontsReady, canvasRef]);
 
   // fit to available space on mount / resize
   useEffect(() => {
