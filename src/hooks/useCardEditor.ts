@@ -19,6 +19,8 @@ export function useCardEditor(cardId?: string) {
   const [saving, setSaving] = useState(false);
   const [pendingArt, setPendingArt] = useState<PendingArt | null>(null);
   const [artImage, setArtImage] = useState<HTMLImageElement | null>(null);
+  const [pendingCostIcon, setPendingCostIcon] = useState<PendingArt | null>(null);
+  const [costIconImage, setCostIconImage] = useState<HTMLImageElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // load existing card
@@ -46,6 +48,16 @@ export function useCardEditor(cardId?: string) {
         if (url && alive) {
           try {
             setArtImage(await loadImage(url));
+          } catch {
+            /* ignore */
+          }
+        }
+        const iconUrl = await resolveUrl(
+          (data as { cost_icon_url: string | null }).cost_icon_url,
+        );
+        if (iconUrl && alive) {
+          try {
+            setCostIconImage(await loadImage(iconUrl));
           } catch {
             /* ignore */
           }
@@ -95,6 +107,24 @@ export function useCardEditor(cardId?: string) {
     setDirty(true);
   }, []);
 
+  const setCostIcon = useCallback(async (file: File) => {
+    const previewUrl = URL.createObjectURL(file);
+    setPendingCostIcon({ file, previewUrl, name: file.name });
+    try {
+      setCostIconImage(await loadImage(previewUrl));
+    } catch {
+      /* ignore */
+    }
+    setDirty(true);
+  }, []);
+
+  const clearCostIcon = useCallback(() => {
+    setPendingCostIcon(null);
+    setCostIconImage(null);
+    setCard((prev) => ({ ...prev, cost_icon_url: null }));
+    setDirty(true);
+  }, []);
+
   const reset = useCallback(() => {
     setCard((prev) => {
       const next: CardState = { ...DEFAULT_CARD, name: prev.name };
@@ -103,6 +133,8 @@ export function useCardEditor(cardId?: string) {
     });
     setPendingArt(null);
     setArtImage(null);
+    setPendingCostIcon(null);
+    setCostIconImage(null);
     setDirty(true);
   }, []);
 
@@ -149,6 +181,17 @@ export function useCardEditor(cardId?: string) {
         );
       }
 
+      let costIconPath = card.cost_icon_url;
+      if (pendingCostIcon) {
+        const ext = (pendingCostIcon.file.name.split(".").pop() || "png").toLowerCase();
+        costIconPath = await uploadBlob(
+          "card-art",
+          `${id}/cost-icon.${ext}`,
+          pendingCostIcon.file,
+          pendingCostIcon.file.type || "image/png",
+        );
+      }
+
       const thumb = await makeThumbnail();
       let thumbPath = card.thumbnail_url;
       if (thumb) thumbPath = await uploadBlob("card-art", `${id}/thumb.jpg`, thumb, "image/jpeg");
@@ -158,6 +201,7 @@ export function useCardEditor(cardId?: string) {
         id,
         art_url: artPath,
         thumbnail_url: thumbPath,
+        cost_icon_url: costIconPath,
         name: card.name?.trim() || card.title?.trim() || "Carta sem nome",
       };
       delete (row as { created_at?: string }).created_at;
@@ -166,14 +210,21 @@ export function useCardEditor(cardId?: string) {
       const { error } = await supabase.from("cards").upsert(row as never);
       if (error) throw error;
 
-      setCard((prev) => ({ ...prev, id, art_url: artPath, thumbnail_url: thumbPath }));
+      setCard((prev) => ({
+        ...prev,
+        id,
+        art_url: artPath,
+        thumbnail_url: thumbPath,
+        cost_icon_url: costIconPath,
+      }));
       setPendingArt(null);
+      setPendingCostIcon(null);
       setDirty(false);
       return id;
     } finally {
       setSaving(false);
     }
-  }, [card, pendingArt, makeThumbnail]);
+  }, [card, pendingArt, pendingCostIcon, makeThumbnail]);
 
   return {
     card,
@@ -190,6 +241,10 @@ export function useCardEditor(cardId?: string) {
     pendingArt,
     setArt,
     clearArt,
+    costIconImage,
+    pendingCostIcon,
+    setCostIcon,
+    clearCostIcon,
     canvasRef,
   };
 }
