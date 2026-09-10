@@ -11,6 +11,7 @@ export function drawCard(
   ctx: CanvasRenderingContext2D,
   card: CardState,
   art: HTMLImageElement | null,
+  costIconImage?: HTMLImageElement | null,
 ) {
   const base = card.base_color || "#2d5480";
   const border = card.auto_border ? autoBorderColor(base) : card.border_color;
@@ -117,7 +118,7 @@ export function drawCard(
   let flavorLeft = CX + 24;
   const icons = Math.max(0, Math.min(2, card.cost_icon || 0));
   if (icons > 0) {
-    const icon = getCostIcon();
+    const icon = costIconImage ?? getCostIcon();
     const ih = ZONES.flavor.h - 18;
     for (let i = 0; i < icons; i++) {
       const ix = CX + 16 + i * (ih + 8);
