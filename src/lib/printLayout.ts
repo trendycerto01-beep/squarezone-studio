@@ -6,7 +6,11 @@ export const BLEED = 3;
 export const PRINT_MM = { w: CARD_MM.w + BLEED * 2, h: CARD_MM.h + BLEED * 2 }; // 69.5 x 94
 export const MARK = 3;
 
-export type LayoutId = "2x2" | "2x4";
+// Espaço entre cartas (onde ficam as marcas de corte). Deve ser >= 2*MARK
+// para as marcas de cartas vizinhas não se sobreporem.
+export const GUTTER = 6;
+
+export type LayoutId = "2x2" | "2x3";
 
 export interface LayoutConfig {
   id: LayoutId;
@@ -15,9 +19,12 @@ export interface LayoutConfig {
   label: string;
 }
 
+// Observação: com sangria a área impressa de cada carta é 69,5 × 94mm.
+// Uma grade 2×4 (376mm de altura) nunca coube numa A4 retrato (297mm) —
+// por isso o segundo layout foi ajustado para 2×3, que cabe com folga.
 export const LAYOUTS: Record<LayoutId, LayoutConfig> = {
   "2x2": { id: "2x2", cols: 2, rows: 2, label: "2×2 (4 cartas)" },
-  "2x4": { id: "2x4", cols: 2, rows: 4, label: "2×4 (8 cartas)" },
+  "2x3": { id: "2x3", cols: 2, rows: 3, label: "2×3 (6 cartas)" },
 };
 
 export interface SlotRect {
@@ -31,8 +38,8 @@ export interface SlotRect {
 }
 
 export function slotRects(layout: LayoutConfig, mirrorColumns = false): SlotRect[] {
-  const totalW = layout.cols * PRINT_MM.w;
-  const totalH = layout.rows * PRINT_MM.h;
+  const totalW = layout.cols * PRINT_MM.w + (layout.cols - 1) * GUTTER;
+  const totalH = layout.rows * PRINT_MM.h + (layout.rows - 1) * GUTTER;
   const offX = (A4.w - totalW) / 2;
   const offY = (A4.h - totalH) / 2;
   const rects: SlotRect[] = [];
@@ -44,8 +51,8 @@ export function slotRects(layout: LayoutConfig, mirrorColumns = false): SlotRect
         index,
         col,
         row,
-        x: offX + drawCol * PRINT_MM.w,
-        y: offY + row * PRINT_MM.h,
+        x: offX + drawCol * (PRINT_MM.w + GUTTER),
+        y: offY + row * (PRINT_MM.h + GUTTER),
         w: PRINT_MM.w,
         h: PRINT_MM.h,
       });
