@@ -35,6 +35,9 @@ export function CardEditorLayout({ cardId }: { cardId?: string }) {
         artName={editor.pendingArt?.name ?? null}
         onFile={editor.setArt}
         onClearArt={editor.clearArt}
+        iconName={editor.pendingCostIcon?.name ?? null}
+        onIconFile={editor.setCostIcon}
+        onClearIcon={editor.clearCostIcon}
         saving={editor.saving}
         dirty={editor.dirty}
         savedRecently={savedRecently}
@@ -43,7 +46,12 @@ export function CardEditorLayout({ cardId }: { cardId?: string }) {
         onReset={editor.reset}
       />
       <div className="min-w-0 flex-1">
-        <CardCanvas card={editor.card} art={editor.artImage} canvasRef={editor.canvasRef} />
+        <CardCanvas
+          card={editor.card}
+          art={editor.artImage}
+          costIcon={editor.costIconImage}
+          canvasRef={editor.canvasRef}
+        />
       </div>
     </div>
   );
