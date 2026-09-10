@@ -1,5 +1,5 @@
 import type { CardState } from "@/types/card";
-import type { LayoutId } from "./printLayout";
+import { LAYOUTS, type LayoutId } from "./printLayout";
 
 export interface PrintSlot {
   card: CardState | null;
@@ -8,7 +8,9 @@ export interface PrintSlot {
   rotation: number;
 }
 
-export const MAX_SLOTS = 8;
+export const MAX_SLOTS = Math.max(
+  ...Object.values(LAYOUTS).map((l) => l.cols * l.rows),
+);
 
 export const emptySlot = (): PrintSlot => ({
   card: null,
@@ -60,7 +62,8 @@ export function clearAllSlots() {
 }
 
 export function capacityOf(layoutId: LayoutId) {
-  return layoutId === "2x4" ? 8 : 4;
+  const layout = LAYOUTS[layoutId];
+  return layout.cols * layout.rows;
 }
 
 /** Place a card in the first empty slot of the active layout. Returns success. */
