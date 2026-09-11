@@ -2,6 +2,7 @@ import { drawCard, drawCardBack } from "./drawCard";
 import { CARD_H, CARD_W } from "./drawZones";
 import { loadImage, resolveUrl } from "../supabaseStorage";
 import { CARD_TYPES } from "../cardTypes";
+import { defaultBackPath } from "../defaultBacks";
 import type { CardState } from "@/types/card";
 
 const artCache = new Map<string, HTMLImageElement>();
@@ -57,16 +58,19 @@ export async function renderBackToCanvas(
   canvas.height = CARD_H;
   const ctx = canvas.getContext("2d")!;
   await document.fonts.ready;
-  const source = overrideUrl ?? card.back_url;
+  // priority: manually attached back -> card's own back -> factory default per type
+  const sources = [overrideUrl, card.back_url, defaultBackPath(card.card_type)].filter(
+    Boolean,
+  ) as string[];
   let img: HTMLImageElement | null = null;
-  if (source) {
+  for (const source of sources) {
     const url = await resolveUrl(source);
-    if (url) {
-      try {
-        img = await loadImage(url);
-      } catch {
-        img = null;
-      }
+    if (!url) continue;
+    try {
+      img = await loadImage(url);
+      break;
+    } catch {
+      img = null;
     }
   }
   const tint = CARD_TYPES[card.card_type]?.back ?? "#2a2a33";
