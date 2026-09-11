@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EditorRouteImport } from './routes/editor'
 import { Route as PrintRouteImport } from './routes/print'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as EditorIdRouteImport } from './routes/editor.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const PrintRoute = PrintRouteImport.update({
   path: '/print',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EditorIdRoute = EditorIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/editor': typeof EditorRouteWithChildren
   '/print': typeof PrintRoute
+  '/settings': typeof SettingsRoute
   '/editor/$id': typeof EditorIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/editor': typeof EditorRouteWithChildren
   '/print': typeof PrintRoute
+  '/settings': typeof SettingsRoute
   '/editor/$id': typeof EditorIdRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/editor': typeof EditorRouteWithChildren
   '/print': typeof PrintRoute
+  '/settings': typeof SettingsRoute
   '/editor/$id': typeof EditorIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/editor' | '/print' | '/editor/$id'
+  fullPaths: '/' | '/editor' | '/print' | '/settings' | '/editor/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/editor' | '/print' | '/editor/$id'
-  id: '__root__' | '/' | '/editor' | '/print' | '/editor/$id'
+  to: '/' | '/editor' | '/print' | '/settings' | '/editor/$id'
+  id: '__root__' | '/' | '/editor' | '/print' | '/settings' | '/editor/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   EditorRoute: typeof EditorRouteWithChildren
   PrintRoute: typeof PrintRoute
+  SettingsRoute: typeof SettingsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -89,6 +99,13 @@ declare module '@tanstack/react-router' {
       path: '/print'
       fullPath: '/print'
       preLoaderRoute: typeof PrintRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/editor/$id': {
@@ -116,6 +133,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   EditorRoute: EditorRouteWithChildren,
   PrintRoute: PrintRoute,
+  SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
