@@ -36,9 +36,9 @@ const EditorIndexRoute = EditorIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const EditorIdRoute = EditorIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => EditorRoute,
+  id: '/editor/$id',
+  path: '/editor/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -75,6 +75,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PrintRoute: typeof PrintRoute
   SettingsRoute: typeof SettingsRoute
+  EditorIdRoute: typeof EditorIdRoute
   EditorIndexRoute: typeof EditorIndexRoute
 }
 
@@ -110,10 +111,10 @@ declare module '@tanstack/react-router' {
     }
     '/editor/$id': {
       id: '/editor/$id'
-      path: '/$id'
+      path: '/editor/$id'
       fullPath: '/editor/$id'
       preLoaderRoute: typeof EditorIdRouteImport
-      parentRoute: typeof EditorRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -122,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PrintRoute: PrintRoute,
   SettingsRoute: SettingsRoute,
+  EditorIdRoute: EditorIdRoute,
   EditorIndexRoute: EditorIndexRoute,
 }
 export const routeTree = rootRouteImport
