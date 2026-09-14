@@ -5,6 +5,7 @@ import { CARD_TYPES } from "@/lib/cardTypes";
 
 export function PrintSlots({
   slots,
+  startIndex = 0,
   onDropCard,
   onClear,
   onRepeat,
@@ -13,6 +14,8 @@ export function PrintSlots({
   canRepeat,
 }: {
   slots: PrintSlot[];
+  /** Índice absoluto do primeiro slot desta folha na fila contínua. */
+  startIndex?: number;
   onDropCard: (index: number, cardId: string) => void;
   onClear: (index: number) => void;
   onRepeat: (index: number) => void;
@@ -22,7 +25,9 @@ export function PrintSlots({
 }) {
   return (
     <div className="space-y-2">
-      {slots.map((slot, i) => (
+      {slots.map((slot, local) => {
+        const i = startIndex + local;
+        return (
         <div
           key={i}
           onDragOver={(e) => e.preventDefault()}
@@ -35,7 +40,7 @@ export function PrintSlots({
         >
           <div className="flex items-center gap-2">
             <span className="grid h-6 w-6 shrink-0 place-items-center rounded bg-[var(--inp)] text-[10px] text-[var(--text2)]">
-              {i + 1}
+              {local + 1}
             </span>
             {slot.card ? (
               <>
@@ -78,7 +83,8 @@ export function PrintSlots({
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

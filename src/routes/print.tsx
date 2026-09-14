@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { FileDown, Loader2, Trash2 } from "lucide-react";
+import { FileDown, Loader2, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PrintSlots } from "@/components/print/PrintSlots";
@@ -32,6 +32,15 @@ function PrintPage() {
   const print = usePrint();
   const { data: cards } = useCardLibrary();
   const [exporting, setExporting] = useState(false);
+  const [sheet, setSheet] = useState(0);
+
+  const active = Math.min(sheet, print.sheetCount - 1);
+  useEffect(() => {
+    if (sheet > print.sheetCount - 1) setSheet(print.sheetCount - 1);
+  }, [sheet, print.sheetCount]);
+
+  const offset = active * print.capacity;
+  const activeSlots = print.sheets[active] ?? [];
 
   const handleDropCard = (index: number, cardId: string) => {
     const card = cards?.find((c) => c.id === cardId);
@@ -51,18 +60,27 @@ function PrintPage() {
     try {
       const { jsPDF } = await import("jspdf");
       const scale = 8; // px per mm ≈ 203 dpi
-      const front = document.createElement("canvas");
-      const back = document.createElement("canvas");
-      await paintSheet(front, print.slots, print.layout, "front", scale);
-      await paintSheet(back, print.slots, print.layout, "back", scale);
-
       const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-      pdf.addImage(front.toDataURL("image/jpeg", 0.94), "JPEG", 0, 0, A4.w, A4.h);
-      pdf.addPage();
-      pdf.addImage(back.toDataURL("image/jpeg", 0.94), "JPEG", 0, 0, A4.w, A4.h);
-      pdf.setFontSize(7);
-      pdf.setTextColor(120);
-      pdf.text("Imprimir em duplex, virar pela borda longa. Escala 100% (sem ajuste).", 8, 292);
+      const canvas = document.createElement("canvas");
+      let first = true;
+
+      for (const sheetSlots of print.sheets) {
+        if (!sheetSlots.some((s) => s.card)) continue;
+        for (const side of ["front", "back"] as const) {
+          if (!first) pdf.addPage();
+          first = false;
+          await paintSheet(canvas, sheetSlots, print.layout, side, scale);
+          pdf.addImage(canvas.toDataURL("image/jpeg", 0.94), "JPEG", 0, 0, A4.w, A4.h);
+          pdf.setFontSize(7);
+          pdf.setTextColor(120);
+          pdf.text(
+            "Imprimir em duplex, virar pela borda longa. Escala 100% (sem ajuste).",
+            8,
+            292,
+          );
+        }
+      }
+
       pdf.save("squarezone-folha.pdf");
       toast.success("PDF gerado");
     } catch (e) {
@@ -100,10 +118,51 @@ function PrintPage() {
           </div>
         </div>
 
+        <div className="mb-4 space-y-1.5">
+          <div className="ui-label">Folhas</div>
+          <div className="flex flex-wrap items-center gap-1">
+            {print.sheets.map((s, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setSheet(i)}
+                className={`group flex items-center gap-1 rounded-md px-2 py-1 text-[11px] ${
+                  i === active
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-[var(--inp)] text-[var(--text2)] hover:text-foreground"
+                }`}
+              >
+                Folha {i + 1}
+                <span className="opacity-60">({s.filter((x) => x.card).length})</span>
+                {print.sheetCount > 1 && (
+                  <X
+                    className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      print.removeSheet(i);
+                    }}
+                  />
+                )}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={print.addSheet}
+              title="Adicionar folha"
+              className="grid h-6 w-6 place-items-center rounded-md bg-[var(--inp)] text-[var(--text2)] hover:text-foreground"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+
         <div className="mb-3 flex items-center justify-between">
-          <span className="section-title">Slots</span>
+          <span className="section-title">Slots — folha {active + 1}</span>
           <button
-            onClick={print.clearAll}
+            onClick={() => {
+              print.clearAll();
+              setSheet(0);
+            }}
             className="flex items-center gap-1 text-[10px] text-[var(--text3)] hover:text-destructive"
           >
             <Trash2 className="h-3 w-3" /> Limpar tudo
@@ -111,7 +170,8 @@ function PrintPage() {
         </div>
 
         <PrintSlots
-          slots={print.slots}
+          slots={activeSlots}
+          startIndex={offset}
           onDropCard={handleDropCard}
           onClear={print.clearSlot}
           onRepeat={(i) => {
@@ -129,7 +189,7 @@ function PrintPage() {
             defaultValue=""
             onChange={(e) => {
               const card = cards?.find((c) => c.id === e.target.value);
-              if (card && !print.addCard(card)) toast.error("A folha está cheia");
+              if (card) print.addCard(card);
               e.target.value = "";
             }}
           >
@@ -146,7 +206,7 @@ function PrintPage() {
             ) : (
               <FileDown className="mr-2 h-4 w-4" />
             )}
-            Exportar PDF (frente e verso)
+            Exportar PDF (todas as folhas)
           </Button>
           <p className="text-[10px] text-[var(--text3)]">
             Imprimir em duplex, virar pela borda longa, escala 100%.
@@ -157,16 +217,16 @@ function PrintPage() {
       <div className="h-full flex-1 overflow-y-auto bg-[#0e1119] p-6">
         <div className="flex flex-wrap gap-8">
           <PrintPreview
-            slots={print.slots}
+            slots={activeSlots}
             layout={print.layout}
             side="front"
-            label="Página — frente"
+            label={`Folha ${active + 1} — frente`}
           />
           <PrintPreview
-            slots={print.slots}
+            slots={activeSlots}
             layout={print.layout}
             side="back"
-            label="Página — verso (espelhado por coluna)"
+            label={`Folha ${active + 1} — verso (espelhado por coluna)`}
           />
         </div>
       </div>
