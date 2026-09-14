@@ -40,7 +40,7 @@ export function PrintSlots({
         >
           <div className="flex items-center gap-2">
             <span className="grid h-6 w-6 shrink-0 place-items-center rounded bg-[var(--inp)] text-[10px] text-[var(--text2)]">
-              {i + 1}
+              {local + 1}
             </span>
             {slot.card ? (
               <>
@@ -83,7 +83,8 @@ export function PrintSlots({
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
