@@ -198,7 +198,29 @@ function LibraryPage() {
             onDelete={handleDelete}
             onExport={(c) => void downloadCardPng(c)}
             onQueue={handleQueue}
+            selectionMode={selectionMode}
+            selection={selection}
+            onToggleSelect={toggleSelect}
+            onQuantityChange={setQuantity}
+            onSelectAllOfType={selectAllOfType}
           />
+        )}
+
+        {selectionMode && selectedIds.length > 0 && (
+          <div className="sticky bottom-4 z-20 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border2)] bg-[var(--panel)]/95 px-4 py-2.5 shadow-lg backdrop-blur">
+            <span className="text-xs">
+              {selectedIds.length} carta(s) selecionada(s)
+              <span className="text-[var(--text3)]"> · {totalCopies} cópia(s)</span>
+            </span>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={clearSelection}>
+                <X className="mr-1.5 h-3.5 w-3.5" /> Limpar seleção
+              </Button>
+              <Button size="sm" onClick={sendToPrint} disabled={sending}>
+                <Printer className="mr-1.5 h-3.5 w-3.5" /> Enviar para Impressão
+              </Button>
+            </div>
+          </div>
         )}
       </div>
     </div>
