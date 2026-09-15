@@ -1,13 +1,13 @@
-import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus, Sparkles } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { CheckSquare, Plus, Printer, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { CardGrid } from "@/components/library/CardGrid";
 import { LibraryFilters, type Filters } from "@/components/library/LibraryFilters";
 import { useCardLibrary } from "@/hooks/useCardLibrary";
 import { downloadCardPng } from "@/lib/canvas/renderOffscreen";
-import { addCardToQueue } from "@/lib/printStore";
+import { addCardToQueue, appendCardsToQueue } from "@/lib/printStore";
 import type { CardState } from "@/types/card";
 
 export const Route = createFileRoute("/")({
