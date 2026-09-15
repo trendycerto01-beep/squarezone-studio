@@ -152,11 +152,20 @@ function LibraryPage() {
               {data?.length ?? 0} carta(s) no baralho do SquareZone
             </p>
           </div>
-          <Button asChild>
-            <Link to="/editor">
-              <Plus className="mr-2 h-4 w-4" /> Nova carta
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={selectionMode ? "secondary" : "outline"}
+              onClick={() => (selectionMode ? exitSelection() : setSelectionMode(true))}
+            >
+              <CheckSquare className="mr-2 h-4 w-4" />
+              {selectionMode ? "Sair da seleção" : "Selecionar"}
+            </Button>
+            <Button asChild>
+              <Link to="/editor">
+                <Plus className="mr-2 h-4 w-4" /> Nova carta
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <div className="mb-6">
