@@ -1,13 +1,13 @@
-import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus, Sparkles } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { CheckSquare, Plus, Printer, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { CardGrid } from "@/components/library/CardGrid";
 import { LibraryFilters, type Filters } from "@/components/library/LibraryFilters";
 import { useCardLibrary } from "@/hooks/useCardLibrary";
 import { downloadCardPng } from "@/lib/canvas/renderOffscreen";
-import { addCardToQueue } from "@/lib/printStore";
+import { addCardToQueue, appendCardsToQueue } from "@/lib/printStore";
 import type { CardState } from "@/types/card";
 
 export const Route = createFileRoute("/")({
@@ -58,6 +58,80 @@ function LibraryPage() {
     else toast.error("A folha atual está cheia — abra a página de impressão");
   };
 
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selection, setSelection] = useState<Record<string, number>>({});
+  const sendingRef = useRef(false);
+  const [sending, setSending] = useState(false);
+  const navigate = useNavigate();
+
+  const selectedIds = Object.keys(selection);
+  const totalCopies = selectedIds.reduce((sum, id) => sum + (selection[id] ?? 1), 0);
+
+  const clearSelection = () => setSelection({});
+
+  const exitSelection = () => {
+    setSelectionMode(false);
+    clearSelection();
+  };
+
+  const toggleSelect = (card: CardState) => {
+    if (!card.id) return;
+    setSelection((prev) => {
+      const next = { ...prev };
+      if (next[card.id!] !== undefined) delete next[card.id!];
+      else next[card.id!] = 1;
+      return next;
+    });
+  };
+
+  const setQuantity = (card: CardState, qty: number) => {
+    if (!card.id) return;
+    const safe = Number.isFinite(qty) ? Math.min(99, Math.max(1, Math.floor(qty))) : 1;
+    setSelection((prev) => (prev[card.id!] === undefined ? prev : { ...prev, [card.id!]: safe }));
+  };
+
+  const selectAllOfType = (list: CardState[]) => {
+    const ids = list.map((c) => c.id).filter(Boolean) as string[];
+    const allSelected = ids.every((id) => selection[id] !== undefined);
+    setSelection((prev) => {
+      const next = { ...prev };
+      for (const id of ids) {
+        if (allSelected) delete next[id];
+        else if (next[id] === undefined) next[id] = 1;
+      }
+      return next;
+    });
+  };
+
+  const sendToPrint = () => {
+    if (sendingRef.current) return;
+    if (!selectedIds.length) return;
+    sendingRef.current = true;
+    setSending(true);
+    try {
+      const occurrences: CardState[] = [];
+      for (const id of selectedIds) {
+        const card = (data ?? []).find((c) => c.id === id);
+        if (!card) continue;
+        const qty = Math.min(99, Math.max(1, Math.floor(selection[id] ?? 1)));
+        for (let i = 0; i < qty; i++) occurrences.push(card);
+      }
+      if (!occurrences.length) {
+        toast.error("Nenhuma carta válida para enviar");
+        return;
+      }
+      const added = appendCardsToQueue(occurrences);
+      toast.success(`${added} carta(s) enviada(s) para a impressão`);
+      exitSelection();
+      void navigate({ to: "/print" });
+    } catch (e) {
+      toast.error(`Falha ao enviar: ${(e as Error).message}`);
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
+    }
+  };
+
   const handleDelete = (card: CardState) => {
     if (!confirm(`Excluir a carta "${card.name}"?`)) return;
     remove.mutate(card, {
@@ -78,11 +152,20 @@ function LibraryPage() {
               {data?.length ?? 0} carta(s) no baralho do SquareZone
             </p>
           </div>
-          <Button asChild>
-            <Link to="/editor">
-              <Plus className="mr-2 h-4 w-4" /> Nova carta
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={selectionMode ? "secondary" : "outline"}
+              onClick={() => (selectionMode ? exitSelection() : setSelectionMode(true))}
+            >
+              <CheckSquare className="mr-2 h-4 w-4" />
+              {selectionMode ? "Sair da seleção" : "Selecionar"}
+            </Button>
+            <Button asChild>
+              <Link to="/editor">
+                <Plus className="mr-2 h-4 w-4" /> Nova carta
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <div className="mb-6">
@@ -115,7 +198,29 @@ function LibraryPage() {
             onDelete={handleDelete}
             onExport={(c) => void downloadCardPng(c)}
             onQueue={handleQueue}
+            selectionMode={selectionMode}
+            selection={selection}
+            onToggleSelect={toggleSelect}
+            onQuantityChange={setQuantity}
+            onSelectAllOfType={selectAllOfType}
           />
+        )}
+
+        {selectionMode && selectedIds.length > 0 && (
+          <div className="sticky bottom-4 z-20 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border2)] bg-[var(--panel)]/95 px-4 py-2.5 shadow-lg backdrop-blur">
+            <span className="text-xs">
+              {selectedIds.length} carta(s) selecionada(s)
+              <span className="text-[var(--text3)]"> · {totalCopies} cópia(s)</span>
+            </span>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={clearSelection}>
+                <X className="mr-1.5 h-3.5 w-3.5" /> Limpar seleção
+              </Button>
+              <Button size="sm" onClick={sendToPrint} disabled={sending}>
+                <Printer className="mr-1.5 h-3.5 w-3.5" /> Enviar para Impressão
+              </Button>
+            </div>
+          </div>
         )}
       </div>
     </div>
