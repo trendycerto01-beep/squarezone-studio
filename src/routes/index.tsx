@@ -58,6 +58,80 @@ function LibraryPage() {
     else toast.error("A folha atual está cheia — abra a página de impressão");
   };
 
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selection, setSelection] = useState<Record<string, number>>({});
+  const sendingRef = useRef(false);
+  const [sending, setSending] = useState(false);
+  const navigate = useNavigate();
+
+  const selectedIds = Object.keys(selection);
+  const totalCopies = selectedIds.reduce((sum, id) => sum + (selection[id] ?? 1), 0);
+
+  const clearSelection = () => setSelection({});
+
+  const exitSelection = () => {
+    setSelectionMode(false);
+    clearSelection();
+  };
+
+  const toggleSelect = (card: CardState) => {
+    if (!card.id) return;
+    setSelection((prev) => {
+      const next = { ...prev };
+      if (next[card.id!] !== undefined) delete next[card.id!];
+      else next[card.id!] = 1;
+      return next;
+    });
+  };
+
+  const setQuantity = (card: CardState, qty: number) => {
+    if (!card.id) return;
+    const safe = Number.isFinite(qty) ? Math.min(99, Math.max(1, Math.floor(qty))) : 1;
+    setSelection((prev) => (prev[card.id!] === undefined ? prev : { ...prev, [card.id!]: safe }));
+  };
+
+  const selectAllOfType = (list: CardState[]) => {
+    const ids = list.map((c) => c.id).filter(Boolean) as string[];
+    const allSelected = ids.every((id) => selection[id] !== undefined);
+    setSelection((prev) => {
+      const next = { ...prev };
+      for (const id of ids) {
+        if (allSelected) delete next[id];
+        else if (next[id] === undefined) next[id] = 1;
+      }
+      return next;
+    });
+  };
+
+  const sendToPrint = () => {
+    if (sendingRef.current) return;
+    if (!selectedIds.length) return;
+    sendingRef.current = true;
+    setSending(true);
+    try {
+      const occurrences: CardState[] = [];
+      for (const id of selectedIds) {
+        const card = (data ?? []).find((c) => c.id === id);
+        if (!card) continue;
+        const qty = Math.min(99, Math.max(1, Math.floor(selection[id] ?? 1)));
+        for (let i = 0; i < qty; i++) occurrences.push(card);
+      }
+      if (!occurrences.length) {
+        toast.error("Nenhuma carta válida para enviar");
+        return;
+      }
+      const added = appendCardsToQueue(occurrences);
+      toast.success(`${added} carta(s) enviada(s) para a impressão`);
+      exitSelection();
+      void navigate({ to: "/print" });
+    } catch (e) {
+      toast.error(`Falha ao enviar: ${(e as Error).message}`);
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
+    }
+  };
+
   const handleDelete = (card: CardState) => {
     if (!confirm(`Excluir a carta "${card.name}"?`)) return;
     remove.mutate(card, {
