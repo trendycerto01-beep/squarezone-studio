@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Upload, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { CARD_TYPE_LIST } from "@/lib/cardTypes";
 import { defaultBackPath, resolveDefaultBack, uploadDefaultBack } from "@/lib/defaultBacks";
 import { useIconUpload } from "@/hooks/useIconUpload";
+import { DEFAULT_COST_ICON_PATH, resolveDefaultCostIcon, uploadDefaultCostIcon } from "@/lib/defaultCostIcon";
 import type { CardType } from "@/types/card";
 
 export const Route = createFileRoute("/settings")({
@@ -21,6 +22,8 @@ export const Route = createFileRoute("/settings")({
         property: "og:description",
         content: "Versos padrão por tipo de carta, usados quando não há verso personalizado.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: SettingsPage,
@@ -110,6 +113,66 @@ function BackCard({ type, label, note }: { type: CardType; label: string; note: 
   );
 }
 
+function CostIconCard() {
+  const [preview, setPreview] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let alive = true;
+    void resolveDefaultCostIcon().then((url) => { if (alive) setPreview(url); });
+    return () => { alive = false; };
+  }, []);
+
+  const handle = useCallback(async (file: File) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await uploadDefaultCostIcon(file);
+      setPreview((previous) => {
+        if (previous?.startsWith("blob:")) URL.revokeObjectURL(previous);
+        return URL.createObjectURL(file);
+      });
+      toast.success("Ícone de custo padrão atualizado");
+    } catch (e) {
+      toast.error(`Falha no envio: ${(e as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
+  }, [busy]);
+  const onImage = useCallback((file: File) => void handle(file), [handle]);
+  const { dragging, onDrop, onDragOver, onDragLeave, onMouseEnter, onMouseLeave } = useIconUpload(onImage);
+
+  return (
+    <div className="w-full max-w-56 rounded-lg border border-border bg-[var(--panel)] p-3">
+      <div className="mb-1 text-xs font-semibold">Ícone de custo</div>
+      <div className="mb-2 text-[10px] text-[var(--text3)]">Padrão para todas as cartas</div>
+      <div
+        onDrop={onDrop} onDragOver={onDragOver} onDragLeave={onDragLeave}
+        onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}
+        onClick={() => { if (!busy) inputRef.current?.click(); }}
+        role="button" tabIndex={0} aria-label="Trocar ícone de custo padrão"
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inputRef.current?.click(); } }}
+        className={`flex cursor-pointer flex-col items-center gap-2 rounded-md border border-dashed px-3 py-4 text-center transition-colors ${dragging ? "border-primary bg-[var(--panel2)]" : "border-[var(--border2)]"}`}
+      >
+        <div className="grid h-[124px] w-[89px] place-items-center overflow-hidden rounded-md bg-[var(--inp)]">
+          {busy ? <Loader2 className="h-4 w-4 animate-spin text-[var(--text3)]" /> : preview ? (
+            <img src={preview} alt="Ícone de custo padrão" className="max-h-full max-w-full object-contain" />
+          ) : <span className="px-2 text-[10px] text-[var(--text3)]">Ícone procedural</span>}
+        </div>
+        <p className="text-[11px] text-[var(--text2)]">{preview ? "Trocar ícone padrão" : "Carregar ícone padrão"}</p>
+        <p className="text-[10px] text-[var(--text3)]">clique, arraste ou cole com Ctrl+V</p>
+        <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onImage(file);
+          e.target.value = "";
+        }} />
+      </div>
+      <div className="mt-2 truncate text-[10px] text-[var(--text3)]">{DEFAULT_COST_ICON_PATH}</div>
+    </div>
+  );
+}
+
 function SettingsPage() {
   return (
     <div className="panel-scroll h-full overflow-y-auto p-6">
@@ -129,6 +192,13 @@ function SettingsPage() {
             <BackCard key={t.id} type={t.id} label={t.label} note={t.note} />
           ))}
         </div>
+      </section>
+      <section className="mt-6 max-w-5xl">
+        <div className="section-title">Ícone de custo padrão global</div>
+        <p className="mb-3 mt-1 text-[11px] text-[var(--text2)]">
+          Cartas com ícone próprio mantêm o seu. Sem ícone próprio, este padrão é usado em todas as cartas.
+        </p>
+        <CostIconCard />
       </section>
     </div>
   );

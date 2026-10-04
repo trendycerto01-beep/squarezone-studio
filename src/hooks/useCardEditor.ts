@@ -5,6 +5,7 @@ import { CARD_TYPES } from "@/lib/cardTypes";
 import { autoBorderColor } from "@/lib/colorUtils";
 import { loadImage, resolveUrl, uploadBlob } from "@/lib/supabaseStorage";
 import { CARD_H, CARD_W } from "@/lib/canvas/drawZones";
+import { loadCostIconWithFallback, watchDefaultCostIcon } from "@/lib/defaultCostIcon";
 
 export interface PendingArt {
   file: File;
@@ -22,6 +23,20 @@ export function useCardEditor(cardId?: string) {
   const [pendingCostIcon, setPendingCostIcon] = useState<PendingArt | null>(null);
   const [costIconImage, setCostIconImage] = useState<HTMLImageElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [defaultIconRevision, setDefaultIconRevision] = useState(0);
+
+  useEffect(() => watchDefaultCostIcon(() => setDefaultIconRevision((n) => n + 1)), []);
+
+  useEffect(() => {
+    let alive = true;
+    const personal = pendingCostIcon?.previewUrl ?? card.cost_icon_url;
+    // Clear the old icon while resolving the new selection; drawCard supplies the procedural icon.
+    setCostIconImage(null);
+    void loadCostIconWithFallback(personal).then((image) => {
+      if (alive) setCostIconImage(image);
+    });
+    return () => { alive = false; };
+  }, [pendingCostIcon?.previewUrl, card.cost_icon_url, defaultIconRevision]);
 
   // load existing card
   useEffect(() => {
@@ -48,16 +63,6 @@ export function useCardEditor(cardId?: string) {
         if (url && alive) {
           try {
             setArtImage(await loadImage(url));
-          } catch {
-            /* ignore */
-          }
-        }
-        const iconUrl = await resolveUrl(
-          (data as { cost_icon_url: string | null }).cost_icon_url,
-        );
-        if (iconUrl && alive) {
-          try {
-            setCostIconImage(await loadImage(iconUrl));
           } catch {
             /* ignore */
           }
@@ -110,17 +115,11 @@ export function useCardEditor(cardId?: string) {
   const setCostIcon = useCallback(async (file: File) => {
     const previewUrl = URL.createObjectURL(file);
     setPendingCostIcon({ file, previewUrl, name: file.name });
-    try {
-      setCostIconImage(await loadImage(previewUrl));
-    } catch {
-      /* ignore */
-    }
     setDirty(true);
   }, []);
 
   const clearCostIcon = useCallback(() => {
     setPendingCostIcon(null);
-    setCostIconImage(null);
     setCard((prev) => ({ ...prev, cost_icon_url: null }));
     setDirty(true);
   }, []);

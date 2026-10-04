@@ -1,0 +1,3 @@
+- [ ] Add a permanent global cost icon upload and preview in Preferences.
+- [ ] Apply card → global → procedural priority to editor and print/library rendering.
+- [ ] Verify upload and rendering in the live app, then apply the required package security update.
