@@ -3,10 +3,10 @@ import { CARD_H, CARD_W } from "./drawZones";
 import { loadImage, resolveUrl } from "../supabaseStorage";
 import { CARD_TYPES } from "../cardTypes";
 import { defaultBackPath } from "../defaultBacks";
+import { loadCostIconWithFallback } from "../defaultCostIcon";
 import type { CardState } from "@/types/card";
 
 const artCache = new Map<string, HTMLImageElement>();
-const iconCache = new Map<string, HTMLImageElement>();
 
 async function getArt(card: CardState): Promise<HTMLImageElement | null> {
   if (!card.art_url) return null;
@@ -24,18 +24,7 @@ async function getArt(card: CardState): Promise<HTMLImageElement | null> {
 }
 
 async function getCostIconImage(card: CardState): Promise<HTMLImageElement | null> {
-  if (!card.cost_icon_url) return null;
-  const cached = iconCache.get(card.cost_icon_url);
-  if (cached) return cached;
-  const url = await resolveUrl(card.cost_icon_url);
-  if (!url) return null;
-  try {
-    const img = await loadImage(url);
-    iconCache.set(card.cost_icon_url, img);
-    return img;
-  } catch {
-    return null;
-  }
+  return loadCostIconWithFallback(card.cost_icon_url);
 }
 
 export async function renderCardToCanvas(card: CardState): Promise<HTMLCanvasElement> {
