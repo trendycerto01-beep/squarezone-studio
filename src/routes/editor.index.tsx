@@ -14,6 +14,8 @@ export const Route = createFileRoute("/editor/")({
         property: "og:description",
         content: "Crie uma nova carta do SquareZone com arte, texturas, bordas e efeitos.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: NewCardEditor,

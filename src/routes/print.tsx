@@ -23,6 +23,8 @@ export const Route = createFileRoute("/print")({
         property: "og:description",
         content: "Folhas A4 com sangria, marcas de corte e verso espelhado para duplex.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: PrintPage,

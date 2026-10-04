@@ -14,6 +14,8 @@ export const Route = createFileRoute("/editor/$id")({
         property: "og:description",
         content: "Edite uma carta salva do SquareZone e exporte em alta resolução.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: EditCard,
